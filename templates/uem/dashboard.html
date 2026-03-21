@@ -1,0 +1,107 @@
+{% extends 'uem/base.html' %}
+{% block title %}Dashboard — Hexnode UEM{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e8f0fe;"><i class="bi bi-laptop" style="color:#1a3c6e;"></i></div>
+      <div><div class="stat-val">{{ total_devices }}</div><div class="stat-lbl">Total Devices</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e6f7ee;"><i class="bi bi-check-circle-fill" style="color:#1a7a45;"></i></div>
+      <div><div class="stat-val">{{ active_devices }}</div><div class="stat-lbl">Active</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fff3e0;"><i class="bi bi-shield-check" style="color:#c17b00;"></i></div>
+      <div><div class="stat-val">{{ total_policies }}</div><div class="stat-lbl">Policies</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#f0ebff;"><i class="bi bi-collection" style="color:#6b21a8;"></i></div>
+      <div><div class="stat-val">{{ total_groups }}</div><div class="stat-lbl">Groups</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Devices + OS Breakdown -->
+<div class="row g-3">
+
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-2"></i>Recent Devices</span>
+        <a href="{% url 'device_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      {% if recent_devices %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Device</th><th>OS</th><th>Owner</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in recent_devices %}
+            <tr>
+              <td>
+                <a href="{% url 'device_detail' d.pk %}" style="color:#1a3c6e; font-weight:600; text-decoration:none;">{{ d.name }}</a>
+                <div style="font-size:.75rem; color:#9aa5be; font-family:monospace;">{{ d.serial_number }}</div>
+              </td>
+              <td>{{ d.get_os_type_display }}</td>
+              <td>{{ d.owner_name|default:"—" }}</td>
+              <td><span class="badge-{{ d.status }}">{{ d.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-laptop fs-2 d-block mb-2"></i>
+        No devices enrolled yet. <a href="{% url 'device_add' %}">Enroll one now.</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-pie-chart me-2"></i>OS Breakdown</div>
+      <div class="card-body">
+        {% for s in os_stats %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:.85rem; font-weight:500;">{{ s.os_type|capfirst }}</span>
+            <span style="font-size:.85rem; color:#6b7892;">{{ s.count }}</span>
+          </div>
+          <div style="background:#f0f3f8; border-radius:20px; height:7px; overflow:hidden;">
+            <div style="background:#1a3c6e; height:100%; border-radius:20px;
+              width:{% if total_devices %}{% widthratio s.count total_devices 100 %}%{% else %}0%{% endif %};"></div>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-muted text-center mt-3" style="font-size:.85rem;">No devices yet.</p>
+        {% endfor %}
+
+        <hr class="my-3">
+        <a href="{% url 'device_add' %}" class="btn btn-primary w-100 mb-2">
+          <i class="bi bi-plus-circle me-2"></i>Enroll Device
+        </a>
+        <a href="{% url 'policy_add' %}" class="btn btn-outline-primary w-100" style="border-radius:8px; font-size:.85rem;">
+          <i class="bi bi-shield-plus me-2"></i>Create Policy
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

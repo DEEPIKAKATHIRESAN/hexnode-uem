@@ -1,0 +1,47 @@
+{% extends 'uem/base.html' %}
+{% block title %}Policies — Hexnode UEM{% endblock %}
+{% block page_title %}Policies{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <span style="font-size:.85rem; color:#6b7892;">{{ policies.count }} policy(s)</span>
+  <a href="{% url 'policy_add' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Create Policy</a>
+</div>
+
+<div class="card">
+  {% if policies %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>Name</th><th>Type</th><th>Devices</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for p in policies %}
+        <tr>
+          <td style="font-weight:600; color:#1a2340;">{{ p.name }}</td>
+          <td>{{ p.get_policy_type_display }}</td>
+          <td>{{ p.device_count }}</td>
+          <td>
+            {% if p.is_active %}
+              <span class="badge-active">Active</span>
+            {% else %}
+              <span class="badge-inactive">Inactive</span>
+            {% endif %}
+          </td>
+          <td style="font-size:.78rem; color:#9aa5be;">{{ p.created_at|date:"M d, Y" }}</td>
+          <td>
+            <a href="{% url 'policy_delete' p.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-shield-check fs-2 d-block mb-2"></i>
+    No policies yet. <a href="{% url 'policy_add' %}">Create your first policy.</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

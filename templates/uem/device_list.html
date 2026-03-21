@@ -1,0 +1,78 @@
+{% extends 'uem/base.html' %}
+{% block title %}Devices — Hexnode UEM{% endblock %}
+{% block page_title %}Devices{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <span style="font-size:.85rem; color:#6b7892;">{{ devices.count }} device(s)</span>
+  <a href="{% url 'device_add' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Enroll Device</a>
+</div>
+
+<!-- Filter bar -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search name / serial / owner..." style="max-width:220px;">
+      <select name="status" class="form-select" style="max-width:140px;">
+        <option value="">All Status</option>
+        <option value="active"   {% if status == 'active'   %}selected{% endif %}>Active</option>
+        <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+        <option value="lost"     {% if status == 'lost'     %}selected{% endif %}>Lost</option>
+        <option value="wiped"    {% if status == 'wiped'    %}selected{% endif %}>Wiped</option>
+      </select>
+      <select name="os" class="form-select" style="max-width:140px;">
+        <option value="">All OS</option>
+        <option value="android" {% if os == 'android' %}selected{% endif %}>Android</option>
+        <option value="ios"     {% if os == 'ios'     %}selected{% endif %}>iOS</option>
+        <option value="windows" {% if os == 'windows' %}selected{% endif %}>Windows</option>
+        <option value="macos"   {% if os == 'macos'   %}selected{% endif %}>macOS</option>
+        <option value="linux"   {% if os == 'linux'   %}selected{% endif %}>Linux</option>
+      </select>
+      <button class="btn btn-primary" type="submit">Filter</button>
+      {% if q or status or os %}
+        <a href="{% url 'device_list' %}" class="btn btn-outline-secondary" style="border-radius:8px;">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  {% if devices %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Device / Serial</th><th>OS</th><th>Model</th>
+          <th>Owner</th><th>Group</th><th>Status</th><th>Enrolled</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in devices %}
+        <tr>
+          <td>
+            <a href="{% url 'device_detail' d.pk %}" style="color:#1a3c6e; font-weight:600; text-decoration:none;">{{ d.name }}</a>
+            <div style="font-size:.73rem; color:#9aa5be; font-family:monospace;">{{ d.serial_number }}</div>
+          </td>
+          <td>{{ d.get_os_type_display }}{% if d.os_version %} <small class="text-muted">{{ d.os_version }}</small>{% endif %}</td>
+          <td>{{ d.model|default:"—" }}</td>
+          <td>{{ d.owner_name|default:"—" }}</td>
+          <td>{{ d.group.name|default:"—" }}</td>
+          <td><span class="badge-{{ d.status }}">{{ d.status }}</span></td>
+          <td style="font-size:.78rem; color:#9aa5be;">{{ d.enrolled_at|date:"M d, Y" }}</td>
+          <td>
+            <a href="{% url 'device_detail' d.pk %}" class="btn btn-sm btn-outline-primary me-1">View</a>
+            <a href="{% url 'device_delete' d.pk %}" class="btn btn-sm btn-outline-danger">Remove</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-laptop fs-2 d-block mb-2"></i>
+    No devices found. <a href="{% url 'device_add' %}">Enroll your first device.</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

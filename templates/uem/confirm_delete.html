@@ -1,0 +1,18 @@
+{% extends 'uem/base.html' %}
+{% block title %}Confirm Delete — Hexnode UEM{% endblock %}
+{% block page_title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:480px;">
+  <div class="card-header text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</div>
+  <div class="card-body">
+    <p>Are you sure you want to delete <strong>{{ obj }}</strong>?</p>
+    <p class="text-muted" style="font-size:.85rem;">This action cannot be undone.</p>
+    <form method="post" class="d-flex gap-2">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger" style="border-radius:8px;">Yes, Delete</button>
+      <a href="{% url back %}" class="btn btn-outline-secondary" style="border-radius:8px;">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

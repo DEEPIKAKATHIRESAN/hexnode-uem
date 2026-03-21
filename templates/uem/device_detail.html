@@ -1,0 +1,84 @@
+{% extends 'uem/base.html' %}
+{% block title %}{{ device.name }} — Hexnode UEM{% endblock %}
+{% block page_title %}Device Detail{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <a href="{% url 'device_list' %}" style="color:#6b7892; font-size:.85rem; text-decoration:none;">
+    <i class="bi bi-arrow-left"></i> Back to Devices
+  </a>
+  <a href="{% url 'device_delete' device.pk %}" class="btn btn-sm btn-outline-danger">
+    <i class="bi bi-trash me-1"></i>Remove
+  </a>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between">
+        <span><i class="bi bi-laptop me-2"></i>{{ device.name }}</span>
+        <span class="badge-{{ device.status }}">{{ device.status }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% for label, value in info %}
+          <div class="col-sm-6">
+            <div style="font-size:.72rem; color:#9aa5be; text-transform:uppercase; letter-spacing:.5px;">{{ label }}</div>
+            <div style="font-size:.9rem; margin-top:2px;">{{ value|default:"—" }}</div>
+          </div>
+          {% endfor %}
+          <div class="col-sm-6">
+            <div style="font-size:.72rem; color:#9aa5be; text-transform:uppercase; letter-spacing:.5px;">Serial Number</div>
+            <div style="font-size:.9rem; margin-top:2px; font-family:monospace;">{{ device.serial_number }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:.72rem; color:#9aa5be; text-transform:uppercase; letter-spacing:.5px;">Operating System</div>
+            <div style="font-size:.9rem; margin-top:2px;">{{ device.get_os_type_display }} {% if device.os_version %}{{ device.os_version }}{% endif %}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:.72rem; color:#9aa5be; text-transform:uppercase; letter-spacing:.5px;">Model</div>
+            <div style="font-size:.9rem; margin-top:2px;">{{ device.model|default:"—" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:.72rem; color:#9aa5be; text-transform:uppercase; letter-spacing:.5px;">Owner</div>
+            <div style="font-size:.9rem; margin-top:2px;">{{ device.owner_name|default:"—" }}</div>
+            {% if device.owner_email %}<div style="font-size:.78rem; color:#6b7892;">{{ device.owner_email }}</div>{% endif %}
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:.72rem; color:#9aa5be; text-transform:uppercase; letter-spacing:.5px;">Group</div>
+            <div style="font-size:.9rem; margin-top:2px;">{{ device.group.name|default:"—" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:.72rem; color:#9aa5be; text-transform:uppercase; letter-spacing:.5px;">Policy</div>
+            <div style="font-size:.9rem; margin-top:2px;">{{ device.policy.name|default:"No policy" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:.72rem; color:#9aa5be; text-transform:uppercase; letter-spacing:.5px;">Enrolled At</div>
+            <div style="font-size:.9rem; margin-top:2px;">{{ device.enrolled_at|date:"M d, Y H:i" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-terminal me-2"></i>Remote Actions</div>
+      <div class="card-body d-flex flex-column gap-2">
+        <button class="btn btn-outline-primary w-100" onclick="alert('Lock command sent to device!')">
+          <i class="bi bi-lock me-2"></i>Remote Lock
+        </button>
+        <button class="btn btn-outline-warning w-100" onclick="alert('Wipe command sent!')">
+          <i class="bi bi-arrow-counterclockwise me-2"></i>Remote Wipe
+        </button>
+        <button class="btn btn-outline-success w-100" onclick="alert('Locating device...')">
+          <i class="bi bi-geo-alt me-2"></i>Locate Device
+        </button>
+        <button class="btn btn-outline-info w-100" onclick="alert('Syncing policies...')">
+          <i class="bi bi-arrow-repeat me-2"></i>Sync Policies
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
