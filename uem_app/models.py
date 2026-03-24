@@ -16,11 +16,13 @@ class DeviceGroup(models.Model):
 
 class Policy(models.Model):
     TYPE_CHOICES = [
-        ('passcode',     'Passcode'),
-        ('wifi',         'Wi-Fi'),
-        ('vpn',          'VPN'),
-        ('restrictions', 'Restrictions'),
-        ('app',          'App Management'),
+        ('passcode',      'Passcode'),
+        ('wifi',          'Wi-Fi'),
+        ('vpn',           'VPN'),
+        ('restrictions',  'Restrictions'),
+        ('app',           'App Management'),
+        ('filevault',     'FileVault'),
+        ('remote_access', 'Remote Access'),
     ]
     name        = models.CharField(max_length=100)
     policy_type = models.CharField(max_length=30, choices=TYPE_CHOICES)
