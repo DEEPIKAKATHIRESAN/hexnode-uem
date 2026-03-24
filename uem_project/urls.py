@@ -23,6 +23,12 @@ urlpatterns = [
     path('policies/add/', views.policy_add, name='policy_add'),
     path('policies/<int:pk>/delete/', views.policy_delete, name='policy_delete'),
 
+    # FileVault
+    path('filevault/', views.filevault, name='filevault'),
+
+    # Remote Access
+    path('remote-access/', views.remote_access, name='remote_access'),
+
     # Groups
     path('groups/', views.group_list, name='group_list'),
     path('groups/add/', views.group_add, name='group_add'),

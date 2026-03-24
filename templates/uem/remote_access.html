@@ -1,0 +1,358 @@
+{% extends 'uem/base.html' %}
+{% block title %}Remote Access — Hexnode UEM{% endblock %}
+{% block page_title %}Remote Access{% endblock %}
+
+{% block content %}
+
+<!-- Device Selector -->
+<div class="card mb-3">
+  <div class="card-body py-2 d-flex flex-wrap gap-2 align-items-center">
+    <span style="font-size:.85rem; font-weight:600; color:#1a2340;">Select Device:</span>
+    {% for d in devices %}
+    <a href="?device={{ d.pk }}"
+       class="btn btn-sm {% if selected and selected.pk == d.pk %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+       style="border-radius:20px; font-size:.78rem;">
+      {{ d.name }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if selected %}
+<!-- Selected Device Info -->
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e8f0fe;"><i class="bi bi-laptop" style="color:#1a3c6e;"></i></div>
+      <div>
+        <div class="stat-val" style="font-size:1.1rem;">{{ selected.name }}</div>
+        <div class="stat-lbl">{{ selected.get_os_type_display }} — {{ selected.serial_number }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e6f7ee;"><i class="bi bi-person" style="color:#1a7a45;"></i></div>
+      <div>
+        <div class="stat-val" style="font-size:1.1rem;">{{ selected.owner_name|default:"Unknown" }}</div>
+        <div class="stat-lbl">Device Owner</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e6f7ee;"><i class="bi bi-circle-fill" style="color:#1a7a45; font-size:.8rem;"></i></div>
+      <div>
+        <div class="stat-val" style="font-size:1.1rem;">Online</div>
+        <div class="stat-lbl">Agent Status</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="row g-3">
+
+  <!-- Left: Remote Actions -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-terminal me-2"></i>Remote Actions</div>
+      <div class="card-body d-flex flex-column gap-2">
+
+        <button class="btn btn-outline-primary w-100 text-start remote-btn"
+          data-action="remote_view"
+          data-label="Remote View & Control"
+          data-step1="Admin clicks Remote View on web console"
+          data-step2="Frontend sends POST /api/devices/{{ selected.pk }}/remote-view/"
+          data-step3="Server authenticates admin token and validates device"
+          data-step4="Server sends screen stream request to agent via WebSocket"
+          data-step5="Agent starts screen capture and streams to server"
+          data-step6="Admin sees live device screen on web console"
+          data-protocol="WebSocket"
+          data-color="primary">
+          <i class="bi bi-display me-2"></i>Remote View & Control
+        </button>
+
+        <button class="btn btn-outline-success w-100 text-start remote-btn"
+          data-action="file_manager"
+          data-label="File Manager"
+          data-step1="Admin opens File Manager on web console"
+          data-step2="Frontend sends GET /api/devices/{{ selected.pk }}/files/"
+          data-step3="Server authenticates and checks device permission"
+          data-step4="Server sends file browse command to agent via MQTT"
+          data-step5="Agent reads file system and sends file list to server"
+          data-step6="Server returns file list to frontend — admin sees files"
+          data-protocol="MQTT"
+          data-color="success">
+          <i class="bi bi-folder me-2"></i>File Manager
+        </button>
+
+        <button class="btn btn-outline-info w-100 text-start remote-btn"
+          data-action="terminal"
+          data-label="Remote Terminal"
+          data-step1="Admin opens Terminal on web console"
+          data-step2="Frontend sends POST /api/devices/{{ selected.pk }}/terminal/"
+          data-step3="Server creates a secure terminal session"
+          data-step4="Server forwards commands to agent via WebSocket"
+          data-step5="Agent executes command on device CLI"
+          data-step6="Output sent back to server and shown to admin"
+          data-protocol="WebSocket"
+          data-color="info">
+          <i class="bi bi-code-square me-2"></i>Remote Terminal
+        </button>
+
+        <button class="btn btn-outline-warning w-100 text-start remote-btn"
+          data-action="remote_lock"
+          data-label="Remote Lock"
+          data-step1="Admin clicks Remote Lock on web console"
+          data-step2="Frontend sends POST /api/devices/{{ selected.pk }}/lock/"
+          data-step3="Server validates admin and logs the action in database"
+          data-step4="Server pushes lock command to agent via FCM/APNs/MQTT"
+          data-step5="Agent receives push notification and locks the device"
+          data-step6="Agent confirms — server updates status to Locked"
+          data-protocol="FCM / APNs / MQTT"
+          data-color="warning">
+          <i class="bi bi-lock me-2"></i>Remote Lock
+        </button>
+
+        <button class="btn btn-outline-danger w-100 text-start remote-btn"
+          data-action="remote_wipe"
+          data-label="Remote Wipe"
+          data-step1="Admin clicks Remote Wipe on web console"
+          data-step2="Frontend sends POST /api/devices/{{ selected.pk }}/wipe/"
+          data-step3="Server validates, logs action and marks device as wiped"
+          data-step4="Server sends wipe command to agent via FCM/APNs/MQTT"
+          data-step5="Agent receives command and wipes all device data"
+          data-step6="Agent confirms wipe — server updates device status"
+          data-protocol="FCM / APNs / MQTT"
+          data-color="danger">
+          <i class="bi bi-arrow-counterclockwise me-2"></i>Remote Wipe
+        </button>
+
+        <button class="btn btn-outline-secondary w-100 text-start remote-btn"
+          data-action="unattended"
+          data-label="Unattended Remote Access"
+          data-step1="Admin initiates unattended session from web console"
+          data-step2="Frontend sends POST /api/devices/{{ selected.pk }}/unattended/"
+          data-step3="Server checks if device is configured for unattended access"
+          data-step4="Server sends silent session request to agent via WebSocket"
+          data-step5="Agent accepts silently — no user interaction needed on device"
+          data-step6="Remote session established — admin can control device"
+          data-protocol="WebSocket"
+          data-color="secondary">
+          <i class="bi bi-person-check me-2"></i>Unattended Access
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Flow Simulation -->
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-diagram-3 me-2"></i>Request Flow — <span id="action-title">Click any action to see the flow</span></span>
+        <span id="protocol-badge" class="badge bg-secondary" style="font-size:.72rem; display:none;"></span>
+      </div>
+      <div class="card-body">
+
+        <!-- Default state -->
+        <div id="default-state" class="text-center py-5 text-muted">
+          <i class="bi bi-arrow-left-circle fs-2 d-block mb-2"></i>
+          <p>Click any remote action on the left<br>to see how the request flows from<br><strong>Frontend → Server → Agent</strong></p>
+        </div>
+
+        <!-- Flow steps -->
+        <div id="flow-container" style="display:none;">
+
+          <!-- Architecture diagram -->
+          <div class="row text-center mb-4" id="arch-diagram">
+            <div class="col-4">
+              <div id="box-frontend" style="background:#e8f0fe; border:2px solid #1a3c6e; border-radius:10px; padding:12px 8px; transition:.3s;">
+                <i class="bi bi-monitor" style="font-size:1.5rem; color:#1a3c6e;"></i>
+                <div style="font-size:.78rem; font-weight:600; color:#1a3c6e; margin-top:4px;">Frontend</div>
+                <div style="font-size:.68rem; color:#6b7892;">Web Console</div>
+              </div>
+            </div>
+            <div class="col-4 d-flex align-items-center justify-content-center flex-column">
+              <div id="arrow1" style="font-size:1.5rem; color:#ccc; transition:.3s;">⇄</div>
+              <div id="box-server" style="background:#fff3e0; border:2px solid #c17b00; border-radius:10px; padding:12px 8px; transition:.3s; width:100%;">
+                <i class="bi bi-server" style="font-size:1.5rem; color:#c17b00;"></i>
+                <div style="font-size:.78rem; font-weight:600; color:#c17b00; margin-top:4px;">Server Side</div>
+                <div style="font-size:.68rem; color:#6b7892;">Django API</div>
+              </div>
+              <div id="arrow2" style="font-size:1.5rem; color:#ccc; transition:.3s;">⇄</div>
+            </div>
+            <div class="col-4">
+              <div id="box-agent" style="background:#e6f7ee; border:2px solid #1a7a45; border-radius:10px; padding:12px 8px; transition:.3s;">
+                <i class="bi bi-phone" style="font-size:1.5rem; color:#1a7a45;"></i>
+                <div style="font-size:.78rem; font-weight:600; color:#1a7a45; margin-top:4px;">Agent</div>
+                <div style="font-size:.68rem; color:#6b7892;">{{ selected.get_os_type_display }} Device</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step by step -->
+          <div id="steps-container"></div>
+
+          <!-- API Request box -->
+          <div id="api-box" style="background:#1a2340; border-radius:10px; padding:14px 16px; margin-top:16px; display:none;">
+            <div style="color:#0d99ff; font-size:.72rem; font-weight:600; margin-bottom:6px;">HTTP REQUEST</div>
+            <div id="api-content" style="color:#a8d8a8; font-family:monospace; font-size:.8rem; line-height:1.8;"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% else %}
+<!-- No device selected -->
+<div class="card">
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-laptop fs-2 d-block mb-2"></i>
+    {% if devices %}
+      <p>Select a device above to start a remote session.</p>
+    {% else %}
+      <p>No devices enrolled yet. <a href="{% url 'device_add' %}">Enroll a device first.</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const steps_colors = {
+  'primary': '#1a3c6e',
+  'success': '#1a7a45',
+  'info':    '#0c6e96',
+  'warning': '#c17b00',
+  'danger':  '#c62828',
+  'secondary':'#4a5568',
+};
+
+document.querySelectorAll('.remote-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const label    = this.dataset.label;
+    const color    = steps_colors[this.dataset.color] || '#1a3c6e';
+    const protocol = this.dataset.protocol;
+    const steps = [
+      this.dataset.step1,
+      this.dataset.step2,
+      this.dataset.step3,
+      this.dataset.step4,
+      this.dataset.step5,
+      this.dataset.step6,
+    ];
+    const action = this.dataset.action;
+
+    // Update title and protocol
+    document.getElementById('action-title').textContent = label;
+    const badge = document.getElementById('protocol-badge');
+    badge.textContent = 'Protocol: ' + protocol;
+    badge.style.display = 'inline-block';
+
+    // Show flow container
+    document.getElementById('default-state').style.display = 'none';
+    document.getElementById('flow-container').style.display = 'block';
+
+    // Build steps HTML
+    const icons = [
+      'bi-mouse2',        // step 1 - admin clicks
+      'bi-arrow-up-circle', // step 2 - request sent
+      'bi-shield-check',  // step 3 - server validates
+      'bi-arrow-right-circle', // step 4 - server to agent
+      'bi-phone',         // step 5 - agent executes
+      'bi-check-circle',  // step 6 - response back
+    ];
+    const who = ['Frontend', 'Frontend → Server', 'Server', 'Server → Agent', 'Agent', 'Agent → Server → Frontend'];
+
+    let stepsHTML = '';
+    steps.forEach((step, i) => {
+      stepsHTML += `
+        <div class="step-item" id="step-${i}"
+          style="display:flex; align-items:flex-start; gap:10px; padding:8px 10px;
+          border-radius:8px; margin-bottom:6px; opacity:0; transform:translateX(-10px);
+          transition: opacity .4s ${i*0.15}s, transform .4s ${i*0.15}s;
+          background:${i===2 ? 'rgba(26,60,110,0.06)' : '#fafbfd'};
+          border-left: 3px solid ${i===2 ? color : '#e8edf5'};">
+          <div style="width:28px; height:28px; border-radius:50%;
+            background:${i===2 ? color : '#f0f3f8'};
+            display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <i class="bi ${icons[i]}" style="font-size:.75rem; color:${i===2 ? '#fff' : '#6b7892'};"></i>
+          </div>
+          <div>
+            <div style="font-size:.7rem; color:#9aa5be; font-weight:600; text-transform:uppercase; letter-spacing:.5px;">${who[i]}</div>
+            <div style="font-size:.83rem; color:#2d3748; margin-top:1px;">${step}</div>
+          </div>
+        </div>`;
+    });
+    document.getElementById('steps-container').innerHTML = stepsHTML;
+
+    // Animate steps in
+    setTimeout(() => {
+      steps.forEach((_, i) => {
+        const el = document.getElementById('step-' + i);
+        if(el) { el.style.opacity = '1'; el.style.transform = 'translateX(0)'; }
+      });
+    }, 50);
+
+    // Show API request box
+    const apiBox = document.getElementById('api-box');
+    const apiContent = document.getElementById('api-content');
+    const methodMap = {
+      'remote_view': 'POST', 'file_manager': 'GET',
+      'terminal': 'POST', 'remote_lock': 'POST',
+      'remote_wipe': 'POST', 'unattended': 'POST'
+    };
+    const endpointMap = {
+      'remote_view':  '/api/devices/{{ selected.pk|default:"1" }}/remote-view/',
+      'file_manager': '/api/devices/{{ selected.pk|default:"1" }}/files/',
+      'terminal':     '/api/devices/{{ selected.pk|default:"1" }}/terminal/',
+      'remote_lock':  '/api/devices/{{ selected.pk|default:"1" }}/lock/',
+      'remote_wipe':  '/api/devices/{{ selected.pk|default:"1" }}/wipe/',
+      'unattended':   '/api/devices/{{ selected.pk|default:"1" }}/unattended/',
+    };
+    const method   = methodMap[action] || 'POST';
+    const endpoint = endpointMap[action] || '/api/devices/action/';
+    apiContent.innerHTML =
+      `<span style="color:#f9cb42;">${method}</span> ${endpoint}\n` +
+      `<span style="color:#9aa5be;">Authorization:</span> Bearer &lt;admin-token&gt;\n` +
+      `<span style="color:#9aa5be;">Content-Type:</span> application/json\n\n` +
+      `<span style="color:#9aa5be;">Body:</span>\n` +
+      `{\n  <span style="color:#f9cb42;">"device_id"</span>: "{{ selected.pk|default:"1" }}",\n` +
+      `  <span style="color:#f9cb42;">"action"</span>: "${action}",\n` +
+      `  <span style="color:#f9cb42;">"protocol"</span>: "${protocol}"\n}`;
+    apiBox.style.display = 'block';
+
+    // Highlight architecture boxes
+    animateArch(action);
+  });
+});
+
+function animateArch(action) {
+  const fe  = document.getElementById('box-frontend');
+  const sv  = document.getElementById('box-server');
+  const ag  = document.getElementById('box-agent');
+  const a1  = document.getElementById('arrow1');
+  const a2  = document.getElementById('arrow2');
+
+  // Reset
+  [fe, sv, ag].forEach(b => b.style.transform = 'scale(1)');
+  [a1, a2].forEach(a => { a.style.color = '#ccc'; a.textContent = '⇄'; });
+
+  // Animate
+  setTimeout(() => { fe.style.transform = 'scale(1.05)'; }, 100);
+  setTimeout(() => { a1.style.color = '#0d99ff'; a1.textContent = '→'; }, 400);
+  setTimeout(() => { sv.style.transform = 'scale(1.08)'; fe.style.transform = 'scale(1)'; }, 700);
+  setTimeout(() => { a2.style.color = '#0d99ff'; a2.textContent = '→'; }, 1000);
+  setTimeout(() => { ag.style.transform = 'scale(1.05)'; sv.style.transform = 'scale(1)'; }, 1300);
+  setTimeout(() => { a2.style.color = '#1a7a45'; a2.textContent = '←'; }, 1800);
+  setTimeout(() => { a1.style.color = '#1a7a45'; a1.textContent = '←'; ag.style.transform = 'scale(1)'; }, 2100);
+}
+</script>
+{% endblock %}

@@ -116,6 +116,13 @@
     <i class="bi bi-plus-circle"></i> Enroll Device
   </a>
 
+  <a class="sb-link {% if 'remote' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'remote_access' %}">
+    <i class="bi bi-cast"></i> Remote Access
+  </a>
+  <a class="sb-link {% if 'filevault' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'filevault' %}">
+    <i class="bi bi-shield-lock"></i> FileVault
+  </a>
+
   <div class="sb-section">Management</div>
   <a class="sb-link {% if 'policy' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'policy_list' %}">
     <i class="bi bi-shield-check"></i> Policies

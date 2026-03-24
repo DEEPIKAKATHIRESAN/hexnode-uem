@@ -110,6 +110,27 @@ def group_add(request):
 
 
 @login_required
+def filevault(request):
+    devices   = Device.objects.filter(os_type__in=['macos', 'windows', 'linux', 'android', 'ios'])
+    device_id = request.GET.get('device')
+    selected  = Device.objects.filter(pk=device_id).first() if device_id else None
+    return render(request, 'uem/filevault.html', {'devices': devices, 'selected': selected})
+
+
+@login_required
+def remote_access(request):
+    devices  = Device.objects.all()
+    device_id = request.GET.get('device')
+    selected = None
+    if device_id:
+        selected = Device.objects.filter(pk=device_id).first()
+    return render(request, 'uem/remote_access.html', {
+        'devices': devices,
+        'selected': selected,
+    })
+
+
+@login_required
 def group_delete(request, pk):
     group = get_object_or_404(DeviceGroup, pk=pk)
     if request.method == 'POST':
